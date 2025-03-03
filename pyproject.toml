@@ -9,20 +9,6 @@ description = "Biomolecular emulator"
 authors = [
 ]
 requires-python = ">=3.10"
-dependencies = [
-    "mdtraj>=1.9.9",
-    "torch_geometric==2.6.1",
-    "torch==2.4.0",
-    "torchvision",
-    "modelcif==0.7",
-    "bio>=1.5.9",
-    "fire==0.7.0",
-    "huggingface-hub",
-    "hydra-core",
-    "dm-tree",
-    "stackprinter",
-    "typer"
-]
 readme = "README.md"
 
 [project.optional-dependencies]
@@ -30,10 +16,6 @@ dev = [
     "pytest", # For developers
     "pytest-cov",
     "pre-commit",
-]
-md = [
-    "openmm==8.2.0",
-    "pdb2pqr==3.4.1"
 ]
 
 [tool.black]
