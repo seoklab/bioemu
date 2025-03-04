@@ -59,15 +59,15 @@ sed -i -e "s#from io import StringIO#from io import StringIO\nfrom silence_tenso
 rm -rf __pycache__
 popd
 
-# Download weights, run with sudo if required
-"${CONDA_PREFIX}/bin/python3" -m colabfold.download
-echo "Download of alphafold2 weights finished."
-echo "-----------------------------------------"
-echo "Installation of ColabFold finished."
-echo "Add ${COLABFOLDDIR}/colabfold-conda/bin to your PATH environment variable to run 'colabfold_batch'."
-echo -e "i.e. for Bash:\n\texport PATH=\"${COLABFOLDDIR}/colabfold-conda/bin:\$PATH\""
-echo "For more details, please run 'colabfold_batch --help'."
-#---------------
+# # Download weights, run with sudo if required
+# "${CONDA_PREFIX}/bin/python3" -m colabfold.download
+# echo "Download of alphafold2 weights finished."
+# echo "-----------------------------------------"
+# echo "Installation of ColabFold finished."
+# echo "Add ${COLABFOLDDIR}/colabfold-conda/bin to your PATH environment variable to run 'colabfold_batch'."
+# echo -e "i.e. for Bash:\n\texport PATH=\"${COLABFOLDDIR}/colabfold-conda/bin:\$PATH\""
+# echo "For more details, please run 'colabfold_batch --help'."
+# #---------------
 
 
 # Patch colabfold install
