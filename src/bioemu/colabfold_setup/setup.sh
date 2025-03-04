@@ -1,6 +1,25 @@
 #!/bin/bash
 
-set -ex
+set -euxo pipefail
+
+# Check if conda environment is activated
+if [ -z "$CONDA_DEFAULT_ENV" ]; then
+    echo "Error: No Conda environment is currently activated."
+    exit 1  # Exit with error code
+fi
+
+# Get the name of the current conda environment
+current_env="$CONDA_DEFAULT_ENV"
+
+# Check if the environment is "bioemu"
+if [ "$current_env" != "bioemu" ]; then
+    echo "Error: You are not in the 'bioemu' environment. Current environment is '$current_env'."
+    exit 1  # Exit with error code
+else
+    echo "You are in the 'bioemu' environment."
+fi
+
+type wget 2>/dev/null || { echo "wget is not installed. Please install it using apt or yum." ; exit 1 ; }
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
@@ -9,15 +28,51 @@ COLABFOLD_DIR="${1:-"~/.localcolabfold"}"
 
 echo "Setting up colabfold..."
 mkdir -p ${COLABFOLD_DIR}
-wget "https://raw.githubusercontent.com/YoshitakaMo/localcolabfold/5fc8775114b637b5672234179c50e694ab057db4/install_colabbatch_linux.sh" -O ${COLABFOLD_DIR}/install_colabbatch_linux.sh
-# Replace 'git+https://github.com/sokrypton/ColabFold' with 'git+https://github.com/sokrypton/ColabFold@e2ca9e8f992cd65c986de5b64885d5572d8b8ad9' in install_colabbatch_linux.sh
-sed -i 's/git+https:\/\/github.com\/sokrypton\/ColabFold/git+https:\/\/github.com\/sokrypton\/ColabFold@e2ca9e8f992cd65c986de5b64885d5572d8b8ad9/g' ${COLABFOLD_DIR}/install_colabbatch_linux.sh
-chmod +x ${COLABFOLD_DIR}/install_colabbatch_linux.sh
-cd ${COLABFOLD_DIR} && bash install_colabbatch_linux.sh
+cd ${COLABFOLD_DIR}
+
+# from install_colabbatch_linux.sh
+#---------------
+CURRENTPATH=`pwd`
+COLABFOLDDIR="${CURRENTPATH}/localcolabfold"
+mkdir "${COLABFOLDDIR}"
+
+# source "${COLABFOLDDIR}/conda/etc/profile.d/conda.sh"
+conda activate bioemu
+
+# install ColabFold and Jaxlib
+pip install --no-warn-conflicts \
+    "colabfold[alphafold] @ git+https://github.com/seoklab/ColabFold@c9a5148c7bf417dea23e2a4be7fa864eb0ea1a45"
+# "$COLABFOLDDIR/colabfold-conda/bin/pip" install --upgrade tensorflow
+
+# # Download the updater
+# chmod +x update_linux.sh
+# cp update_linux.sh "${COLABFOLDDIR}"
+
+pushd "${CONDA_PREFIX}/lib/python3.10/site-packages/colabfold"
+# Use 'Agg' for non-GUI backend
+sed -i -e "s#from matplotlib import pyplot as plt#import matplotlib\nmatplotlib.use('Agg')\nimport matplotlib.pyplot as plt#g" plot.py
+# modify the default params directory
+sed -i -e "s#appdirs.user_cache_dir(__package__ or \"colabfold\")#\"${COLABFOLDDIR}/colabfold\"#g" download.py
+# suppress warnings related to tensorflow
+sed -i -e "s#from io import StringIO#from io import StringIO\nfrom silence_tensorflow import silence_tensorflow\nsilence_tensorflow()#g" batch.py
+# remove cache directory
+rm -rf __pycache__
+popd
+
+# Download weights, run with sudo if required
+"${CONDA_PREFIX}/bin/python3" -m colabfold.download
+echo "Download of alphafold2 weights finished."
+echo "-----------------------------------------"
+echo "Installation of ColabFold finished."
+echo "Add ${COLABFOLDDIR}/colabfold-conda/bin to your PATH environment variable to run 'colabfold_batch'."
+echo -e "i.e. for Bash:\n\texport PATH=\"${COLABFOLDDIR}/colabfold-conda/bin:\$PATH\""
+echo "For more details, please run 'colabfold_batch --help'."
+#---------------
+
 
 # Patch colabfold install
 echo "Patching colabfold installation..."
-patch ${COLABFOLD_DIR}/localcolabfold/colabfold-conda/lib/python3.10/site-packages/alphafold/model/modules.py ${SCRIPT_DIR}/modules.patch
-patch ${COLABFOLD_DIR}/localcolabfold/colabfold-conda/lib/python3.10/site-packages/colabfold/batch.py ${SCRIPT_DIR}/batch.patch
+patch ${CONDA_PREFIX}/lib/python3.10/site-packages/alphafold/model/modules.py ${SCRIPT_DIR}/modules.patch
+patch ${CONDA_PREFIX}/lib/python3.10/site-packages/colabfold/batch.py ${SCRIPT_DIR}/batch.patch
 
 echo "Colabfold installation complete!"
