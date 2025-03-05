@@ -41,7 +41,7 @@ conda activate bioemu
 
 # install ColabFold and Jaxlib
 pip install --no-warn-conflicts \
-    "colabfold[alphafold] @ git+https://github.com/seoklab/ColabFold@c9a5148c7bf417dea23e2a4be7fa864eb0ea1a45"
+    "colabfold[alphafold] @ git+https://github.com/seoklab/ColabFold@0d2bd511005000045a5d16e418a4d38d4eb4154c"
 # "$COLABFOLDDIR/colabfold-conda/bin/pip" install --upgrade tensorflow
 
 # # Download the updater
