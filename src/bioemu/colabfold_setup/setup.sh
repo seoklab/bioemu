@@ -51,8 +51,6 @@ pip install --no-warn-conflicts \
 pushd "${CONDA_PREFIX}/lib/python3.10/site-packages/colabfold"
 # Use 'Agg' for non-GUI backend
 sed -i -e "s#from matplotlib import pyplot as plt#import matplotlib\nmatplotlib.use('Agg')\nimport matplotlib.pyplot as plt#g" plot.py
-# modify the default params directory
-sed -i -e "s#appdirs.user_cache_dir(__package__ or \"colabfold\")#\"${COLABFOLDDIR}/colabfold\"#g" download.py
 # suppress warnings related to tensorflow
 sed -i -e "s#from io import StringIO#from io import StringIO\nfrom silence_tensorflow import silence_tensorflow\nsilence_tensorflow()#g" batch.py
 # remove cache directory
