@@ -14,13 +14,6 @@ from Bio.SeqRecord import SeqRecord
 
 StrPath = str | os.PathLike
 
-
-DEFAULT_COLABFOLD_DIR = os.path.join(os.path.expanduser("~"), ".localcolabfold")
-COLABFOLD_INSTALL_SCRIPT = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), "colabfold_setup", "setup.sh"
-)
-
-
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
@@ -51,29 +44,18 @@ def _get_colabfold_install_dir() -> StrPath:
     return os.getenv("COLABFOLD_DIR", os.path.join(os.path.expanduser("~"), ".localcolabfold"))
 
 
-def ensure_colabfold_install(colabfold_dir: StrPath) -> str:
+def ensure_colabfold_install() -> str:
     """
     Ensures localcolabfold is installed under `colabfold_dir`. Returns path
     to directory where colabfold executables are placed
     """
-    colabfold_batch_exec = os.path.join(
-        colabfold_dir, "localcolabfold", "colabfold-conda", "bin", "colabfold_batch"
-    )
-    colabfold_bin_dir = os.path.dirname(colabfold_batch_exec)
-    if os.path.exists(colabfold_batch_exec):
-        # Colabfold present
-        pass
-    else:
-        logger.info(f"Colabfold not present under {colabfold_dir}. Installing...")
-        os.makedirs(colabfold_dir, exist_ok=True)
-        _install = subprocess.run(
-            ["bash", COLABFOLD_INSTALL_SCRIPT, colabfold_dir],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-        )
-        assert (
-            _install.returncode == 0
-        ), f"Something went wrong during colabfold install: {_install.stdout.decode()}"
+    cmd = ["which", "colabfold_batch"]
+    result = subprocess.run(cmd, stdout=subprocess.PIPE)
+    colabfold_bin_dir = result.stdout.decode().strip()
+    if not colabfold_bin_dir:
+        raise RuntimeError("ColabFold is not installed. Please run setup.sh first. Make sure it is in your PATH.")
+    colabfold_bin_dir = os.path.dirname(colabfold_bin_dir)
+    
     return colabfold_bin_dir
 
 
@@ -156,8 +138,7 @@ def get_colabfold_embeds(
         return single_rep_file, pair_rep_file
 
     # If we don't already have embeds, run colabfold
-    colabfold_dir = _get_colabfold_install_dir()
-    colabfold_bin_dir = ensure_colabfold_install(colabfold_dir=colabfold_dir)
+    colabfold_bin_dir = ensure_colabfold_install()
 
     colabfold_env = os.environ.copy()
     colabfold_env["PATH"] = f'{colabfold_bin_dir}:{colabfold_env["PATH"]}'
